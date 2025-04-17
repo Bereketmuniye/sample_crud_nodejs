@@ -1,4 +1,5 @@
-const db = require('../db/db'); // SQLite DB connection
+const db = require('../db/db'); 
+const bcrypt=require('bcrypt');
 
 
 //get all users
@@ -40,10 +41,25 @@ const getUserByUsername = (username) => {
     });
 }
 
-//create user
-const createUser = (username, password, email) => {
+//get user by email
+const getUserByEmail = (email) => {
     return new Promise((resolve, reject) => {
-        db.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email], function (err) {
+        db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+//create user
+const createUser= async (username, password, email) => {
+    const hashedPassword= await bcrypt.hash(password, 10);
+
+    return new Promise((resolve, reject) => {
+        db.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, hashedPassword, email], function (err) {
             if (err) {
                 reject(err);
             } else {
@@ -82,5 +98,6 @@ module.exports = {
     getUserByUsername,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    getUserByEmail
 }
